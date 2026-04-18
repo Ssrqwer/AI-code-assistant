@@ -1,0 +1,52 @@
+# Virtual Environment (don't upload this massive folder)
+venv/
+env/
+.env/
+.venv/
+myenv/
+
+# Python cache files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Environment variables (contains secrets like API keys)
+.env
+.env.local
+.env.*.local
+
+# IDE settings (personal editor preferences)
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS junk files
+.DS_Store
+Thumbs.db
+
+# Logs and databases
+*.log
+*.sqlite
+*.sqlite3
+*.db
+
+# Testing and coverage
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# Jupyter Notebooks (if any)
+.ipynb_checkpoints/
+
+# Python type checkers
+.mypy_cache/
+.pyre/
+.pytype/
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
