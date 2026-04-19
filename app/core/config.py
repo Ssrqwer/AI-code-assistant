@@ -2,40 +2,42 @@
 app/core/config.py
 ------------------
 Single source of truth for all application configuration.
-
-Uses pydantic-settings to:
-  - Load values from the `.env` file automatically.
-  - Validate types and raise clear errors for missing variables at startup.
-  - Expose a typed `Settings` singleton used everywhere in the app.
 """
 
 from functools import lru_cache
+from typing import List
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    """
-    Application settings loaded from environment variables / .env file.
-
-    All fields map 1-to-1 to the keys defined in `.env.example`.
-    pydantic-settings will raise a `ValidationError` at startup if any
-    required field is missing, giving a clear developer error message.
-    """
-
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
         case_sensitive=True,
-        extra="ignore",            # Silently ignore unknown env vars
+        extra="ignore",
     )
 
     # ------------------------------------------------------------------
-    # Google AI credentials
+    # Google AI credentials - NOW SUPPORTS MULTIPLE KEYS
     # ------------------------------------------------------------------
-    GEMINI_API_KEY: str
+    GEMINI_API_KEYS: str  # Comma-separated: "key1,key2,key3"
+    
+    @property
+    def GEMINI_API_KEYS_LIST(self) -> List[str]:
+        """Parse comma-separated keys into a list, stripping whitespace."""
+        return [k.strip() for k in self.GEMINI_API_KEYS.split(",") if k.strip()]
+
+    # Backward compatibility - first key as default
+    @property
+    def GEMINI_API_KEY(self) -> str:
+        """Return first key for backward compatibility."""
+        keys = self.GEMINI_API_KEYS_LIST
+        if not keys:
+            raise ValueError("No GEMINI_API_KEYS provided")
+        return keys[0]
 
     # ------------------------------------------------------------------
-    # System prompts — loaded from .env, never hardcoded in Python logic
+    # System prompts
     # ------------------------------------------------------------------
     PROMPT_GENERATE_CODE: str
     PROMPT_EXPLAIN_CODE: str
@@ -45,7 +47,7 @@ class Settings(BaseSettings):
     PROMPT_GENERATE_DOCSTRING: str
 
     # ------------------------------------------------------------------
-    # Optional tunables (sensible defaults keep .env minimal)
+    # Optional tunables
     # ------------------------------------------------------------------
     GEMINI_MODEL: str = "gemini-2.5-flash"
     APP_TITLE: str = "AI Coding Assistant API"
@@ -55,10 +57,4 @@ class Settings(BaseSettings):
 
 @lru_cache(maxsize=1)
 def get_settings() -> Settings:
-    """
-    Return the cached Settings singleton.
-
-    Using `lru_cache` means the .env file is read exactly once per
-    process, making this safe and efficient to call from anywhere.
-    """
     return Settings()
